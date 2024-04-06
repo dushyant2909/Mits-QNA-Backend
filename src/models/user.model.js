@@ -26,7 +26,6 @@ const userSchema = new mongoose.Schema({
     },
     phone: {
         type: String,
-        required: [true, "Phone number is required"]
     },
     profilePicture: {
         type: String,// Cloudinary url to be stored
