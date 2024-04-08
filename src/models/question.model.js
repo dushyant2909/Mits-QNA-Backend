@@ -6,6 +6,9 @@ const questionSchema = new mongoose.Schema(
             type: String,
             required: [true, "Question title is required"]
         },
+        slug: {
+            type: String
+        },
         description: {
             type: String,
             required: [true, "Question description is required"]
