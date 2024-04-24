@@ -42,4 +42,71 @@ const askQuestion = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, questionDetail, "Question added successfully"));
 })
 
-export { askQuestion }
+
+const getAllQuestions = asyncHandler(async (req, res) => {
+    try {
+        // Aggregate the questions to get details directly
+        const aggregatedQuestions = await Question.aggregate([
+            {
+                $lookup: {
+                    from: "tags",
+                    localField: "tags",
+                    foreignField: "_id",
+                    as: "tags",
+                },
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "publishedBy",
+                    foreignField: "_id",
+                    as: "publishedBy",
+                },
+            },
+            {
+                $addFields: {
+                    publishedBy: {
+                        $first: "$publishedBy",
+                    },
+                },
+            },
+            {
+                $sort: {
+                    createdAt: -1
+                }
+            },
+            {
+                $project: {
+                    title: 1,
+                    slug: 1,
+                    description: 1,
+                    publishedBy: {
+                        enrollmentNumber: 1,
+                    },
+                    tags: {
+                        $map: {
+                            input: "$tags",
+                            as: "tag",
+                            in: {
+                                _id: "$$tag._id",
+                                tagName: "$$tag.tagName",
+                            },
+                        },
+                    },
+                    voteCount: 1,
+                    viewCount: 1
+                },
+            },
+        ]).exec(); // Execute the aggregation pipeline
+
+        return res.status(200).json(new ApiResponse(200, aggregatedQuestions, "Questions fetched successfully"));
+    } catch (error) {
+        console.error("Error in fetching questions:", error);
+        throw new ApiError(500, "Something went wrong while fetching questions from database")
+    }
+});
+
+
+
+
+export { askQuestion, getAllQuestions }
